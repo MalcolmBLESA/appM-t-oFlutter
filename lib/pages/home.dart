@@ -22,44 +22,55 @@ class HomePage extends StatelessWidget {
         appBar: _appBar(),
         body: Column(
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 40, left: 20, right: 20),
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color.fromARGB(200, 0, 0, 0),
-                    blurRadius: 40,
-                    spreadRadius: 0.0,
-                  ),
-                ],
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Rechercher une ville',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                  ),
-                  filled: true,
-                  fillColor: const Color.fromARGB(255, 255, 255, 255),
-                  contentPadding: const EdgeInsets.all(0),
-                  prefixIcon: Container(
-                    width: 50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SvgPicture.asset('assets/icons/loupe-search-svgrepo-com (1).svg'), // Optionnel : icône loupe
-                    ),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
+            _searchBar(),
           ],
         ),
       ),
     );
+  }
+
+  Container _searchBar() {
+    return Container(
+            margin: const EdgeInsets.only(top: 40, left: 20, right: 20),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: const Color.fromARGB(200, 0, 0, 0),
+                  blurRadius: 40,
+                  
+                ),
+              ],
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Rechercher une ville',
+                hintStyle: TextStyle(
+                  fontSize: 14,
+                ),
+                filled: true,
+                fillColor: const Color.fromARGB(255, 255, 255, 255),
+                contentPadding: const EdgeInsets.all(0),
+                suffixIcon: Container(
+                  width: 50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: SvgPicture.asset('assets/icons/calendar-days-svgrepo-com.svg'),
+                    ),
+                ),
+                prefixIcon: Container(
+                  width: 50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: SvgPicture.asset('assets/icons/loupe-search-svgrepo-com (1).svg'),
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          );
   }
 
   AppBar _appBar() {
