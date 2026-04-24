@@ -23,23 +23,52 @@ class HomePage extends StatelessWidget {
         body: Column(
           children: [
             _searchBar(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-              child: Text(
-                "Ville",
-                style: TextStyle(fontSize: 40, color: Color.fromARGB(200, 255, 255, 255)
+            _nameCity(),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                padding: const EdgeInsets.all(20),
+                
+                
+                children: [
+                  _buildWeatherCard(label: "Température", value: "22", unit: "°C"),
+                  _buildWeatherCard(label: "Ressentie", value: "24", unit: "°C"),
+                  _buildWeatherCard(label: "Humidité", value: "78", unit: "%"),
+                  _buildWeatherCard(label: "Vent", value: "15", unit: "km/h"),
+                  _buildWeatherCard(label: "Précipitations", value: "0.5", unit: "mm"),
+                  _buildWeatherCard(label: "Nuages", value: "60", unit: "%"),
+                ],)
                 ),
-              ),
-            ),
           ],  
         ),
       ),
     );
   }
 
+  Container _nameCity() {
+    return  Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: const Color.fromARGB(50, 255, 255, 255),
+                  blurRadius: 40,
+                  
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            child: Text(
+              "Ville",
+              style: TextStyle(fontSize: 40, color: Color.fromARGB(200, 255, 255, 255)
+              ),
+            ),
+          );
+  }
+
   Container _searchBar() {
     return Container(
-            margin: const EdgeInsets.only(top: 40, left: 20, right: 20),
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
@@ -49,6 +78,7 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
+            margin: const EdgeInsets.only(top: 40, left: 20, right: 20),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Rechercher une ville',
@@ -130,8 +160,17 @@ class HomePage extends StatelessWidget {
   }
   Widget _buildWeatherCard({required String label, required String value, required String unit}) {
   return Container(
+    width: 5,
+    height: 5,
     decoration: BoxDecoration(
-      color: const Color.fromARGB(100, 255, 255, 255), 
+      boxShadow: [
+                BoxShadow(
+                  color: const Color.fromARGB(15, 255, 255, 255),
+                  blurRadius: 40,
+                  
+                ),
+              ],
+      color: const Color.fromARGB(50, 255, 255, 255), 
       borderRadius: BorderRadius.circular(20),
     ),
     padding: const EdgeInsets.all(15), 
