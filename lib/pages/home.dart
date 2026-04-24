@@ -23,7 +23,15 @@ class HomePage extends StatelessWidget {
         body: Column(
           children: [
             _searchBar(),
-          ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              child: Text(
+                "Ville",
+                style: TextStyle(fontSize: 40, color: Color.fromARGB(200, 255, 255, 255)
+                ),
+              ),
+            ),
+          ],  
         ),
       ),
     );
@@ -48,7 +56,7 @@ class HomePage extends StatelessWidget {
                   fontSize: 14,
                 ),
                 filled: true,
-                fillColor: const Color.fromARGB(255, 255, 255, 255),
+                fillColor: const Color.fromARGB(250, 255, 255, 255),
                 contentPadding: const EdgeInsets.all(0),
                 suffixIcon: Container(
                   width: 50,
@@ -120,4 +128,32 @@ class HomePage extends StatelessWidget {
       ],
     );
   }
+  Widget _buildWeatherCard({required String label, required String value, required String unit}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(100, 255, 255, 255), 
+      borderRadius: BorderRadius.circular(20),
+    ),
+    padding: const EdgeInsets.all(15), 
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center, 
+      children: [
+        Text(
+          label, 
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        const SizedBox(height: 5), 
+        Text(
+          value,
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          unit, 
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+        ),
+      ],
+    ),
+  );
 }
+}
+
