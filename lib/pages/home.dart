@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   String precipitation = "--";
   String cloud = "--";
   DateTimeRange? selectedDateRange;
+  List<dynamic> dailyForecasts = [];
 
   Future<void> _pickDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
@@ -67,12 +68,15 @@ class _HomePageState extends State<HomePage> {
           children: [
             _searchBar(),
             _nameCity(),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                padding: const EdgeInsets.all(20),
+            _dailyForecastList(),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+              alignment: WrapAlignment.spaceEvenly,
+              spacing: 4.0,
+              runSpacing: 4.0,
+
                 children: [
                   _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
                   _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
@@ -89,7 +93,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  
 
   Widget _nameCity() {
     return Container(
@@ -114,35 +117,32 @@ class _HomePageState extends State<HomePage> {
       ),
       child: TextField(
         onSubmitted: (value) async {
-          String start,end;
-
-          if(selectedDateRange != null){
+          String start, end;
+          
+          if (selectedDateRange != null) {
             start = selectedDateRange!.start.toIso8601String().split('T')[0];
             end = selectedDateRange!.end.toIso8601String().split('T')[0];
-          }else{
-            final dates = getNextSevenDays();
-            start = dates['start']!;
-            end = dates['end']!;
+          } else {
+            
+            DateTime now = DateTime.now();
+            start = now.toIso8601String().split('T')[0];
+            end = now.add(const Duration(days: 6)).toIso8601String().split('T')[0];
           }
-          setState(() {
-            cityName = value;
-          });
 
           final coords = await _weatherService.getCoordinates(value);
 
           if (coords != null) {
-            final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!,start,end);
-            print("Latitude : ${coords['lat']}");
-            print("Longitude : ${coords['lon']}");
-            if(data != null){
-
-              String nowHour = DateTime.now().toIso8601String().substring(0, 13) + ":00";
-              List<dynamic> times = data['hourly']['time'];
-              int index = times.indexOf(nowHour);
-              if (index == -1) index = 0;
-
+            final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!, start, end);
+            
+            if (data != null) {
               setState(() {
                 cityName = value;
+                
+                String nowHour = DateTime.now().toIso8601String().substring(0, 13) + ":00";
+                int index = data['hourly']['time'].indexOf(nowHour);
+                if (index == -1) index = 0;
+
+                
                 temperature = data['hourly']['temperature_2m'][index].toString();
                 felt = data['hourly']['apparent_temperature'][index].toString();
                 humidity = data['hourly']['relative_humidity_2m'][index].toString();
@@ -150,13 +150,19 @@ class _HomePageState extends State<HomePage> {
                 precipitation = data['hourly']['precipitation'][index].toString();
                 cloud = data['hourly']['cloud_cover'][index].toString();
 
-
+                
+                dailyForecasts = [];
+                for (int i = 0; i < data['daily']['time'].length; i++) {
+                  dailyForecasts.add({
+                    'day': data['daily']['time'][i],
+                    'max': data['daily']['temperature_2m_max'][i],
+                    'min': data['daily']['temperature_2m_min'][i],
+                    'code': data['daily']['weathercode'][i],
+                  });
+                }
               });
             }
-          } else {
-            print("Ville non trouvée");
           }
-          
         },
         decoration: InputDecoration(
           hintText: 'Rechercher une ville',
@@ -165,7 +171,7 @@ class _HomePageState extends State<HomePage> {
           fillColor: const Color.fromARGB(250, 255, 255, 255),
           contentPadding: const EdgeInsets.all(0),
           suffixIcon: GestureDetector(
-            onTap: _pickDateRange, // Appelle la fonction de dates
+            onTap: _pickDateRange, 
             child: Padding(
               padding: const EdgeInsets.all(15),
               child: SvgPicture.asset('assets/icons/calendar-days-svgrepo-com.svg'),
@@ -223,4 +229,51 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+  Widget _dailyForecastList() {
+  if (dailyForecasts.isEmpty) return const SizedBox();
+
+  return SizedBox(
+    height: 150,
+    child: Center(
+      child: ListView.builder(
+        shrinkWrap: true,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: dailyForecasts.length,
+        itemBuilder: (context, index) {
+          var dayData = dailyForecasts[index];
+          
+          DateTime date = DateTime.parse(dayData['day']);
+          List<String> weekdays = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
+          String dayName = weekdays[date.weekday - 1];
+
+          return Container(
+            width: 90,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(dayName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                
+                Icon(
+                  dayData['code'] > 50 ? Icons.cloud : Icons.wb_sunny,
+                  color: dayData['code'] > 50 ? Colors.white : Colors.yellow[600],
+                ),
+                const SizedBox(height: 8),
+                Text("${dayData['max']}°", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text("${dayData['min']}°", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              ],
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
 }
