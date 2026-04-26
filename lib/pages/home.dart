@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meteo_aquatech/weather_service.dart';
@@ -64,30 +66,39 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _appBar(),
-        body: Column(
-          children: [
-            _searchBar(),
-            _nameCity(),
-            _dailyForecastList(),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: Wrap(
-              alignment: WrapAlignment.spaceEvenly,
-              spacing: 4.0,
-              runSpacing: 4.0,
-
-                children: [
-                  _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
-                  _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
-                  _buildWeatherCard(label: "Humidité", value: humidity, unit: "%"),
-                  _buildWeatherCard(label: "Vent", value: wind, unit: "km/h"),
-                  _buildWeatherCard(label: "Précipitations", value: precipitation, unit: "mm"),
-                  _buildWeatherCard(label: "Nuages", value: cloud, unit: "%"),
-                ],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              _searchBar(),
+              _nameCity(),
+              _dailyForecastList(),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  
+                  int crossAxisCount = constraints.maxWidth > 800 ? 6 : (constraints.maxWidth > 500 ? 3 : 2);
+                  
+                  return GridView.count(
+                    
+                    shrinkWrap: true,           
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                    
+                    childAspectRatio: 1.0, 
+                    children: [
+                      _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
+                      _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
+                      _buildWeatherCard(label: "Humidité", value: humidity, unit: "%"),
+                      _buildWeatherCard(label: "Vent", value: wind, unit: "km/h"),
+                      _buildWeatherCard(label: "Précipitations", value: precipitation, unit: "mm"),
+                      _buildWeatherCard(label: "Nuages", value: cloud, unit: "%"),
+                    ],
+                  );
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -195,6 +206,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildWeatherCard({required String label, required String value, required String unit}) {
     return Container(
+      constraints: const BoxConstraints(
+      minWidth: 100, 
+      maxWidth: 150,
+      ),
       decoration: BoxDecoration(
         color: const Color.fromARGB(50, 255, 255, 255),
         borderRadius: BorderRadius.circular(20),
@@ -229,6 +244,8 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+
+
   Widget _dailyForecastList() {
   if (dailyForecasts.isEmpty) return const SizedBox();
 
