@@ -35,9 +35,53 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         selectedDateRange = picked;
       });
-      print("Dates choisies : ${picked.start} au ${picked.end}");
+      _fetchWeatherData();
+      }
+      
+    }
+
+    Future<void> _fetchWeatherData() async {
+  if (cityName == "..." || cityName.isEmpty) return;
+
+  String start, end;
+  if (selectedDateRange != null) {
+    start = selectedDateRange!.start.toIso8601String().split('T')[0];
+    end = selectedDateRange!.end.toIso8601String().split('T')[0];
+  } else {
+    start = DateTime.now().toIso8601String().split('T')[0];
+    end = DateTime.now().add(const Duration(days: 6)).toIso8601String().split('T')[0];
+  }
+  final coords = await _weatherService.getCoordinates(cityName);
+
+  if (coords != null) {
+    final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!, start, end);
+    
+    if (data != null) {
+      setState(() {
+        String nowHour = DateTime.now().toIso8601String().substring(0, 13) + ":00";
+        int index = data['hourly']['time'].indexOf(nowHour);
+        if (index == -1) index = 0;
+
+        temperature = data['hourly']['temperature_2m'][index].toString();
+        felt = data['hourly']['apparent_temperature'][index].toString();
+        humidity = data['hourly']['relative_humidity_2m'][index].toString();
+        wind = data['hourly']['wind_speed_10m'][index].toString();
+        precipitation = data['hourly']['precipitation'][index].toString();
+        cloud = data['hourly']['cloud_cover'][index].toString();
+
+        dailyForecasts = [];
+        for (int i = 0; i < data['daily']['time'].length; i++) {
+          dailyForecasts.add({
+            'day': data['daily']['time'][i],
+            'max': data['daily']['temperature_2m_max'][i],
+            'min': data['daily']['temperature_2m_min'][i],
+            'code': data['daily']['weathercode'][i],
+          });
+        }
+      });
     }
   }
+}
 
 
   Map<String, String> getNextSevenDays() {
@@ -128,52 +172,10 @@ class _HomePageState extends State<HomePage> {
       ),
       child: TextField(
         onSubmitted: (value) async {
-          String start, end;
-          
-          if (selectedDateRange != null) {
-            start = selectedDateRange!.start.toIso8601String().split('T')[0];
-            end = selectedDateRange!.end.toIso8601String().split('T')[0];
-          } else {
-            
-            DateTime now = DateTime.now();
-            start = now.toIso8601String().split('T')[0];
-            end = now.add(const Duration(days: 6)).toIso8601String().split('T')[0];
-          }
-
-          final coords = await _weatherService.getCoordinates(value);
-
-          if (coords != null) {
-            final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!, start, end);
-            
-            if (data != null) {
-              setState(() {
-                cityName = value;
-                
-                String nowHour = DateTime.now().toIso8601String().substring(0, 13) + ":00";
-                int index = data['hourly']['time'].indexOf(nowHour);
-                if (index == -1) index = 0;
-
-                
-                temperature = data['hourly']['temperature_2m'][index].toString();
-                felt = data['hourly']['apparent_temperature'][index].toString();
-                humidity = data['hourly']['relative_humidity_2m'][index].toString();
-                wind = data['hourly']['wind_speed_10m'][index].toString();
-                precipitation = data['hourly']['precipitation'][index].toString();
-                cloud = data['hourly']['cloud_cover'][index].toString();
-
-                
-                dailyForecasts = [];
-                for (int i = 0; i < data['daily']['time'].length; i++) {
-                  dailyForecasts.add({
-                    'day': data['daily']['time'][i],
-                    'max': data['daily']['temperature_2m_max'][i],
-                    'min': data['daily']['temperature_2m_min'][i],
-                    'code': data['daily']['weathercode'][i],
-                  });
-                }
-              });
-            }
-          }
+          setState(() {
+          cityName = value; // On enregistre d'abord le nom
+          });
+          _fetchWeatherData();
         },
         decoration: InputDecoration(
           hintText: 'Rechercher une ville',
@@ -279,7 +281,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 
                 Icon(
-                  dayData['code'] > 50 ? Icons.cloud : Icons.wb_sunny,
+                  dayData['code'] > 75 ? Icons.cloud : Icons.wb_sunny,
                   color: dayData['code'] > 50 ? Colors.white : Colors.yellow[600],
                 ),
                 const SizedBox(height: 8),
