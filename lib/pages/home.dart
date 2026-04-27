@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -116,36 +115,40 @@ class _HomePageState extends State<HomePage> {
               _searchBar(),
               _nameCity(),
               _dailyForecastList(),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  
-                  int crossAxisCount = constraints.maxWidth > 800 ? 6 : (constraints.maxWidth > 500 ? 3 : 2);
-                  
-                  return GridView.count(
-                    
-                    shrinkWrap: true,           
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    
-                    childAspectRatio: 1.0, 
-                    children: [
-                      _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
-                      _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
-                      _buildWeatherCard(label: "Humidité", value: humidity, unit: "%"),
-                      _buildWeatherCard(label: "Vent", value: wind, unit: "km/h"),
-                      _buildWeatherCard(label: "Précipitations", value: precipitation, unit: "mm"),
-                      _buildWeatherCard(label: "Nuages", value: cloud, unit: "%"),
-                    ],
-                  );
-                },
-              ),
+              _responsiveWheatherCard(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  LayoutBuilder _responsiveWheatherCard() {
+    return LayoutBuilder(
+              builder: (context, constraints) {
+                
+                int crossAxisCount = constraints.maxWidth > 800 ? 6 : (constraints.maxWidth > 500 ? 3 : 2);
+                
+                return GridView.count(
+                  
+                  shrinkWrap: true,           
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  
+                  childAspectRatio: 1.0, 
+                  children: [
+                    _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
+                    _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
+                    _buildWeatherCard(label: "Humidité", value: humidity, unit: "%"),
+                    _buildWeatherCard(label: "Vent", value: wind, unit: "km/h"),
+                    _buildWeatherCard(label: "Précipitations", value: precipitation, unit: "mm"),
+                    _buildWeatherCard(label: "Nuages", value: cloud, unit: "%"),
+                  ],
+                );
+              },
+            );
   }
 
 
