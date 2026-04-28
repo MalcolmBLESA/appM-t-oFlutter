@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meteo_aquatech/weather_service.dart';
 
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -24,14 +25,27 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> dailyForecasts = [];
   int selectedDayIndex = 0;
   Map<String, dynamic>? lastWeatherData;
+  bool isLoading = false;
 
   Future<void> _pickDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
+      locale: const Locale("fr", "FR"),
       firstDate: DateTime(1900),
       lastDate: DateTime.now().add(const Duration(days: 14)),
       saveText: 'Valider',
-    );
+      builder: (context, child) {
+            return Column(
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 400.0,
+                  ),
+                  child: child,
+                )
+              ],
+            );
+          });
 
     if (picked != null) {
       setState(() {
@@ -54,6 +68,12 @@ class _HomePageState extends State<HomePage> {
     end = DateTime.now().add(const Duration(days: 6)).toIso8601String().split('T')[0];
   }
   final coords = await _weatherService.getCoordinates(cityName);
+  if (coords != null && coords.containsKey('error')) {
+    setState(() {
+      cityName = "Ville non trouvée"; 
+  });
+  return; 
+}
 
   if (coords != null) {
     final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!, start, end);
@@ -114,7 +134,7 @@ class _HomePageState extends State<HomePage> {
   };
 }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
@@ -130,15 +150,43 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _appBar(),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _searchBar(),
-              _nameCity(),
-              _dailyForecastList(),
-              _responsiveWheatherCard(),
-            ],
-          ),
+        body: Stack(
+          children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: WeatherService.isLoading,
+              builder: (context, loading, child) {
+                if (!loading) return const SizedBox.shrink();
+                return Container(
+                  color: Color.fromARGB(50, 255, 255, 255),
+                  child: const Center(
+                    child: CircularProgressIndicator()
+                    ),
+                );
+              },
+            ),
+            
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _searchBar(),
+                  _nameCity(),
+                  _dailyForecastList(),
+                  _responsiveWheatherCard(),
+                ],
+              ),
+            ),
+
+           
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.3), 
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -161,7 +209,7 @@ class _HomePageState extends State<HomePage> {
                   childAspectRatio: 1.0, 
                   children: [
                     _buildWeatherCard(label: "Température", value: temperature, unit: "°C"),
-                    _buildWeatherCard(label: "Ressentie", value: felt, unit: "°C"),
+                    _buildWeatherCard(label: "Ressenti", value: felt, unit: "°C"),
                     _buildWeatherCard(label: "Humidité", value: humidity, unit: "%"),
                     _buildWeatherCard(label: "Vent", value: wind, unit: "km/h"),
                     _buildWeatherCard(label: "Précipitations", value: precipitation, unit: "mm"),
@@ -259,17 +307,7 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      leading: Padding(
-        padding: const EdgeInsets.all(15),
-        child: SvgPicture.asset('assets/icons/left-arrow-svgrepo-com (1).svg'),
-      ),
       title: const Text("Météo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.all(15),
-          child: SvgPicture.asset('assets/icons/three-dots-menu-svgrepo-com (1).svg'),
-        ),
-      ],
     );
   }
 
