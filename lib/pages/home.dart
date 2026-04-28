@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meteo_aquatech/weather_service.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -21,6 +22,8 @@ class _HomePageState extends State<HomePage> {
   String cloud = "--";
   DateTimeRange? selectedDateRange;
   List<dynamic> dailyForecasts = [];
+  int selectedDayIndex = 0;
+  Map<String, dynamic>? lastWeatherData;
 
   Future<void> _pickDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
@@ -61,6 +64,9 @@ class _HomePageState extends State<HomePage> {
         int index = data['hourly']['time'].indexOf(nowHour);
         if (index == -1) index = 0;
 
+
+        lastWeatherData = data;
+        selectedDayIndex = 0;
         temperature = data['hourly']['temperature_2m'][index].toString();
         felt = data['hourly']['apparent_temperature'][index].toString();
         humidity = data['hourly']['relative_humidity_2m'][index].toString();
@@ -81,11 +87,26 @@ class _HomePageState extends State<HomePage> {
     }
   }
 }
+  void _updateWeatherCards(int dayIndex) {
+  if (lastWeatherData == null) return;
+
+  setState(() {
+    selectedDayIndex = dayIndex;
+    int hourlyIndex = dayIndex * 24 + (dayIndex == 0 ? DateTime.now().hour : 12);
+
+    temperature = lastWeatherData!['hourly']['temperature_2m'][hourlyIndex].toString();
+    felt = lastWeatherData!['hourly']['apparent_temperature'][hourlyIndex].toString();
+    humidity = lastWeatherData!['hourly']['relative_humidity_2m'][hourlyIndex].toString();
+    wind = lastWeatherData!['hourly']['wind_speed_10m'][hourlyIndex].toString();
+    precipitation = lastWeatherData!['hourly']['precipitation'][hourlyIndex].toString();
+    cloud = lastWeatherData!['hourly']['cloud_cover'][hourlyIndex].toString();
+  });
+}
 
 
   Map<String, String> getNextSevenDays() {
   DateTime now = DateTime.now();
-  DateTime sevenDaysLater = now.add(Duration(days: 6)); // J+6 pour avoir 7 jours au total
+  DateTime sevenDaysLater = now.add(Duration(days: 6)); 
 
   return {
     'start': now.toIso8601String().split('T')[0],
@@ -152,6 +173,7 @@ class _HomePageState extends State<HomePage> {
   }
 
 
+
   Widget _nameCity() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
@@ -176,7 +198,8 @@ class _HomePageState extends State<HomePage> {
       child: TextField(
         onSubmitted: (value) async {
           setState(() {
-          cityName = value; // On enregistre d'abord le nom
+          cityName = value; 
+          cityName = cityName[0].toUpperCase() + cityName.substring(1).toLowerCase();
           });
           _fetchWeatherData();
         },
@@ -266,32 +289,45 @@ class _HomePageState extends State<HomePage> {
           var dayData = dailyForecasts[index];
           
           DateTime date = DateTime.parse(dayData['day']);
+          String formattedDate = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
           List<String> weekdays = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
           String dayName = weekdays[date.weekday - 1];
 
-          return Container(
-            width: 90,
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(dayName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                
-                Icon(
-                  dayData['code'] > 75 ? Icons.cloud : Icons.wb_sunny,
-                  color: dayData['code'] > 50 ? Colors.white : Colors.yellow[600],
+          return GestureDetector(
+            onTap: () => _updateWeatherCards(index),
+            child: Container(
+                width: 90,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: selectedDayIndex == index 
+                    ? Colors.white.withOpacity(0.3) 
+                    : Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selectedDayIndex == index ? Colors.white : Colors.transparent,
+                        width: 2,
+                        ),
+                     ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+              
+                    
+                    Text(dayName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(formattedDate, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                    const SizedBox(height: 8),
+                    
+                    Icon(
+                      dayData['code'] > 50 ? Icons.cloud : Icons.wb_sunny,
+                      color: dayData['code'] > 50 ? Colors.white : Colors.yellow[600],
+                    ),
+                    const SizedBox(height: 8),
+                    Text("${dayData['max']}°", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text("${dayData['min']}°", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text("${dayData['max']}°", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("${dayData['min']}°", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-              ],
-            ),
+              ),
+            
           );
         },
       ),
