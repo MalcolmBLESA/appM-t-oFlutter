@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
   final coords = await _weatherService.getCoordinates(cityName);
   if (coords != null && coords.containsKey('error')) {
     setState(() {
-      cityName = "Ville non trouvée"; 
+      cityName = "ville non trouvée"; 
   });
   return; 
 }
@@ -311,6 +311,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  IconData _getWeatherIcon(int code) {
+  if (code == 0) return Icons.wb_sunny;
+  if (code >= 1 && code <= 3) return Icons.wb_cloudy;
+  if (code >= 45 && code <= 48) return Icons.foggy;
+  if (code >= 51 && code <= 67) return Icons.umbrella;
+  if (code >= 71 && code <= 77) return Icons.ac_unit;   
+  if (code >= 80 && code <= 82) return Icons.thunderstorm; 
+  if (code >= 95) return Icons.flash_on;               
+  return Icons.help_outline; 
+}
+
+Color _getWeatherColor(int code) {
+  if (code == 0) return Colors.yellow[600]!;
+  if (code >= 1 && code <= 3) return Colors.white70;
+  if (code >= 51 && code <= 82) return Colors.lightBlueAccent;
+  return Colors.white;
+}
+
 
   Widget _dailyForecastList() {
   if (dailyForecasts.isEmpty) return const SizedBox();
@@ -356,9 +374,10 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 8),
                     
                     Icon(
-                      dayData['code'] > 50 ? Icons.cloud : Icons.wb_sunny,
-                      color: dayData['code'] > 50 ? Colors.white : Colors.yellow[600],
-                    ),
+                        _getWeatherIcon(dayData['code']),
+                        color: _getWeatherColor(dayData['code']),
+                        size: 28, 
+                      ),
                     const SizedBox(height: 8),
                     Text("${dayData['max']}°", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                     Text("${dayData['min']}°", style: const TextStyle(color: Colors.white70, fontSize: 13)),
