@@ -13,6 +13,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+    // --- SERVICES ET VARIABLES D'ÉTAT ---
   final WeatherService _weatherService = WeatherService();
   String cityName = "...";
   String temperature = "--";
@@ -21,18 +22,20 @@ class _HomePageState extends State<HomePage> {
   String wind = "--";
   String precipitation = "--";
   String cloud = "--";
-  DateTimeRange? selectedDateRange;
-  List<dynamic> dailyForecasts = [];
-  int selectedDayIndex = 0;
-  Map<String, dynamic>? lastWeatherData;
+  DateTimeRange? selectedDateRange;// Pour la sélection personnalisée de dates
+  List<dynamic> dailyForecasts = [];// Liste des prévisions par jour
+  int selectedDayIndex = 0;// Index du jour actuellement affiché
+  Map<String, dynamic>? lastWeatherData;// Stockage des dernières données reçues
   bool isLoading = false;
+  // --- LOGIQUE MÉTIER / APPELS API ---
 
+  /// Ouvre le sélecteur de calendrier Flutter pour choisir une plage de dates
   Future<void> _pickDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       locale: const Locale("fr", "FR"),
       firstDate: DateTime(1900),
-      lastDate: DateTime.now().add(const Duration(days: 14)),
+      lastDate: DateTime.now().add(const Duration(days: 14)),// Limite à J+14 car sinon ce n'est plus précit
       saveText: 'Valider',
       builder: (context, child) {
             return Column(
@@ -51,14 +54,14 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         selectedDateRange = picked;
       });
-      _fetchWeatherData();
+      _fetchWeatherData();// Recharge les données après sélection
       }
       
     }
-
+// Récupère les coordonnées GPS puis les données météo 
     Future<void> _fetchWeatherData() async {
   if (cityName == "..." || cityName.isEmpty) return;
-
+// Définition de la période (par défaut 7 jours)
   String start, end;
   if (selectedDateRange != null) {
     start = selectedDateRange!.start.toIso8601String().split('T')[0];
@@ -67,6 +70,7 @@ class _HomePageState extends State<HomePage> {
     start = DateTime.now().toIso8601String().split('T')[0];
     end = DateTime.now().add(const Duration(days: 6)).toIso8601String().split('T')[0];
   }
+  // 1. Géocodage (Ville -> Lat/Lon)
   final coords = await _weatherService.getCoordinates(cityName);
   if (coords != null && coords.containsKey('error')) {
     setState(() {
@@ -74,7 +78,7 @@ class _HomePageState extends State<HomePage> {
   });
   return; 
 }
-
+ // 2. Récupération météo
   if (coords != null) {
     final data = await _weatherService.getWeather(coords['lat']!, coords['lon']!, start, end);
     
@@ -87,13 +91,14 @@ class _HomePageState extends State<HomePage> {
 
         lastWeatherData = data;
         selectedDayIndex = 0;
+        // Mise à jour des variables d'affichage
         temperature = data['hourly']['temperature_2m'][index].toString();
         felt = data['hourly']['apparent_temperature'][index].toString();
         humidity = data['hourly']['relative_humidity_2m'][index].toString();
         wind = data['hourly']['wind_speed_10m'][index].toString();
         precipitation = data['hourly']['precipitation'][index].toString();
         cloud = data['hourly']['cloud_cover'][index].toString();
-
+        // Formatage de la liste pour les prévisions
         dailyForecasts = [];
         for (int i = 0; i < data['daily']['time'].length; i++) {
           dailyForecasts.add({
@@ -107,11 +112,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 }
+// Met à jour les cartes de détails quand on clique sur un jour différent
   void _updateWeatherCards(int dayIndex) {
   if (lastWeatherData == null) return;
 
   setState(() {
     selectedDayIndex = dayIndex;
+    // On prend l'heure actuelle pour aujourd'hui, sinon midi
     int hourlyIndex = dayIndex * 24 + (dayIndex == 0 ? DateTime.now().hour : 12);
 
     temperature = lastWeatherData!['hourly']['temperature_2m'][hourlyIndex].toString();
@@ -133,7 +140,7 @@ class _HomePageState extends State<HomePage> {
     'end': sevenDaysLater.toIso8601String().split('T')[0],
   };
 }
-
+// --- INTERFACE UTILISATEUR (WIDGETS) ---
 @override
   Widget build(BuildContext context) {
     return Container(
@@ -152,6 +159,7 @@ class _HomePageState extends State<HomePage> {
         appBar: _appBar(),
         body: Stack(
           children: [
+            // Indicateur de chargement global via le service
             ValueListenableBuilder<bool>(
               valueListenable: WeatherService.isLoading,
               builder: (context, loading, child) {
@@ -191,11 +199,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+// Grille de détails météo responsive
   LayoutBuilder _responsiveWheatherCard() {
     return LayoutBuilder(
               builder: (context, constraints) {
-                
+                // Définit le nombre de colonnes selon la largeur de l'écran
                 int crossAxisCount = constraints.maxWidth > 800 ? 6 : (constraints.maxWidth > 500 ? 3 : 2);
                 
                 return GridView.count(
@@ -234,7 +242,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+  
+// Barre de recherche avec icône calendrier
   Widget _searchBar() {
     return Container(
       margin: const EdgeInsets.only(top: 40, left: 20, right: 20),
@@ -279,7 +288,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+// Widget réutilisable pour les petites cartes de stats
   Widget _buildWeatherCard({required String label, required String value, required String unit}) {
     return Container(
       constraints: const BoxConstraints(
@@ -302,34 +311,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  AppBar _appBar() {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      title: const Text("Météo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  IconData _getWeatherIcon(int code) {
-  if (code == 0) return Icons.wb_sunny;
-  if (code >= 1 && code <= 3) return Icons.wb_cloudy;
-  if (code >= 45 && code <= 48) return Icons.foggy;
-  if (code >= 51 && code <= 67) return Icons.umbrella;
-  if (code >= 71 && code <= 77) return Icons.ac_unit;   
-  if (code >= 80 && code <= 82) return Icons.thunderstorm; 
-  if (code >= 95) return Icons.flash_on;               
-  return Icons.help_outline; 
-}
-
-Color _getWeatherColor(int code) {
-  if (code == 0) return Colors.yellow[600]!;
-  if (code >= 1 && code <= 3) return Colors.white70;
-  if (code >= 51 && code <= 82) return Colors.lightBlueAccent;
-  return Colors.white;
-}
-
-
+  // Liste des prévisions journalières
   Widget _dailyForecastList() {
   if (dailyForecasts.isEmpty) return const SizedBox();
 
@@ -391,4 +373,34 @@ Color _getWeatherColor(int code) {
     ),
   );
 }
+
+  
+  // --- ICONES ET COULEURS ---
+// Retourne l'icône correspondante au code météo
+  IconData _getWeatherIcon(int code) {
+  if (code == 0) return Icons.wb_sunny;
+  if (code >= 1 && code <= 3) return Icons.wb_cloudy;
+  if (code >= 45 && code <= 48) return Icons.foggy;
+  if (code >= 51 && code <= 67) return Icons.umbrella;
+  if (code >= 71 && code <= 77) return Icons.ac_unit;   
+  if (code >= 80 && code <= 82) return Icons.thunderstorm; 
+  if (code >= 95) return Icons.flash_on;               
+  return Icons.help_outline; 
+}
+// Retourne la couleur de l'icône selon la météo
+Color _getWeatherColor(int code) {
+  if (code == 0) return Colors.yellow[600]!;
+  if (code >= 1 && code <= 3) return Colors.white70;
+  if (code >= 51 && code <= 82) return Colors.lightBlueAccent;
+  return Colors.white;
+}
+
+AppBar _appBar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      title: const Text("Météo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    );
+  }
+
 }
