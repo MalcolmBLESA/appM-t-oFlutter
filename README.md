@@ -1,17 +1,61 @@
-# meteo_aquatech
+Meteo Aquatech 🌦️
+Meteo Aquatech est une application mobile moderne et performante développée avec Flutter. Elle offre une visualisation précise des conditions météorologiques en s'appuyant sur les données de l'API Open-Meteo.
 
-A new Flutter project.
+✨ Fonctionnalités
+🔍 Recherche Intelligente : Trouvez instantanément la météo de n'importe quelle ville grâce au service de géocodage intégré.
 
-## Getting Started
+📊 Données Complètes : Visualisez en un clin d'œil la température actuelle, le ressenti, le taux d'humidité, la vitesse du vent, les précipitations et la nébulosité.
 
-This project is a starting point for a Flutter application.
+📅 Prévisions Flexibles : Consultez les prévisions classiques ou utilisez le sélecteur de plage de dates pour explorer la météo sur une période précise.
 
-A few resources to get you started if this is your first Flutter project:
+🎨 Interface Intuitive : Une UI soignée avec des dégradés dynamiques et des icônes SVG pour une expérience utilisateur fluide.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+📱 Multiplateforme : Conçu pour fonctionner sur Android, iOS, Web et Desktop.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+------------------------------------------
+
+🚀 Installation et Lancement
+Prérequis
+Flutter SDK (version ^3.11.5 recommandée).
+
+Un terminal ou un IDE configuré (VS Code / Android Studio).
+
+Étapes:
+
+1.Cloner le projet
+- git clone https://github.com/malcolmblesa/appMeteoFlutter.git cd appMeteoFlutter
+  
+2.Installer les dépendances
+- flutter pub get
+
+3.Lancer l'application
+- flutter run
+  
+------------------------------------------
+
+🛠️ Technologies et API
+Framework : Flutter
+
+Source de données : Open-Meteo API (Géocodage et Weather API).
+
+Packages clés :
+
+http : Pour les requêtes API.
+
+flutter_svg : Pour l'affichage des icônes.
+
+google_fonts : Pour la typographie personnalisée.
+
+------------------------------------------
+
+📁 Structure du Projet
+lib/pages/home.dart : Interface principale et logique de navigation.
+
+lib/weather_service.dart : Service de gestion des appels API Open-Meteo.
+
+assets/icons/ : Collection d'icônes SVG pour l'interface.
+
+------------------------------------------
+
+🤝 Contribution
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request pour améliorer l'application.
